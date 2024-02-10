@@ -10,7 +10,8 @@ if config_env() == :prod do
 
   config :crebito, App.Repo,
     url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10")
+    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+    log: false
 
   config :crebito, http_port: String.to_integer(System.get_env("PORT") || "4000")
 end

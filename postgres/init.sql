@@ -62,6 +62,30 @@ BEGIN
 END
 $$;
 
+CREATE FUNCTION lookup_statement(_account_id int)
+RETURNS TABLE (balance bigint, available_limit bigint, latest_entries json)
+LANGUAGE plpgsql AS $$
+BEGIN
+  RETURN QUERY
+      WITH latest_entries AS (
+        SELECT
+          e.account_id,
+          e.amount,
+          e.description,
+          e.inserted_at
+        FROM entries e
+        WHERE e.account_id = _account_id
+        ORDER BY inserted_at DESC
+        LIMIT 10
+      ), le_json AS (
+        SELECT
+          json_agg(le) latest_entries
+        FROM latest_entries le
+      )
+      SELECT acc.balance, acc.available_limit, le_json.latest_entries FROM le_json, accounts acc WHERE acc.id = _account_id;
+END
+$$;
+
 INSERT INTO accounts 
     (id, balance, available_limit)
 VALUES

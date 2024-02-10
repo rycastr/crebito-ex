@@ -1,7 +1,8 @@
-defmodule App.Router do
-  alias App.StatementHandler
-  alias App.TransactionHandler
+defmodule Infra.Router do
   use Plug.Router
+
+  alias Infra.StatementHandlerV2
+  alias Infra.TransactionHandler
 
   plug(Plug.Parsers,
     parsers: [:urlencoded, :json],
@@ -12,7 +13,7 @@ defmodule App.Router do
   plug(:dispatch)
 
   get "/clientes/:account_id/extrato" do
-    StatementHandler.get_statement(conn.params)
+    StatementHandlerV2.get_statement(conn.params)
     |> do_response(conn)
   end
 

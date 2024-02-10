@@ -1,4 +1,4 @@
-defmodule App.TransactionHandler do
+defmodule Infra.TransactionHandler do
   @input_transaction_schema %{
     account_id: [required: true, type: :integer],
     valor: [required: true, type: :integer],
@@ -20,15 +20,15 @@ defmodule App.TransactionHandler do
     end
   end
 
-  defp handle_result({:ok, data}) do
-    {:ok,
-     %{
-       "limite" => data.available_limit,
-       "saldo" => data.new_balance
-     }}
+  defp handle_result(result) do
+    with {:ok, data} <- result do
+      {:ok,
+       %{
+         "limite" => data.available_limit,
+         "saldo" => data.new_balance
+       }}
+    end
   end
-
-  defp handle_result(result), do: result
 
   defp parse_amount("c", amount), do: amount
   defp parse_amount("d", amount), do: -amount

@@ -1,14 +1,6 @@
-ARG ELIXIR_VERSION=1.16.1
-ARG OTP_VERSION=25.3.2.9
-ARG DEBIAN_VERSION=bookworm-20240130-slim
+FROM hexpm/elixir:1.16.1-erlang-25.3.2.9-alpine-3.19.1 as builder
 
-ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
-ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
-
-FROM ${BUILDER_IMAGE} as builder
-
-RUN apt-get update -y && apt-get install -y build-essential git \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN apk update && apk add git
 
 WORKDIR /app
 
@@ -31,24 +23,14 @@ COPY config/runtime.exs config/
 
 RUN mix release
 
-FROM ${RUNNER_IMAGE}
+FROM alpine:3.19.1
 
-RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
-
-RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
-
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
+RUN apk update && apk add libncursesw libstdc++ libgcc
 
 WORKDIR "/app"
-RUN chown nobody /app
 
 ENV MIX_ENV="prod"
 
-COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/crebito ./
-
-USER nobody
+COPY --from=builder /app/_build/${MIX_ENV}/rel/crebito ./
 
 CMD ["/bin/sh", "-c", "/app/bin/crebito start"]
